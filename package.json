@@ -1,6 +1,6 @@
 {
   "name": "mx-codigos-postales",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "type": "module",
   "description": "Códigos postales mexicanos con geolocalización y búsqueda avanzada",
   "main": "dist/index.js",
