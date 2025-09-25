@@ -1,23 +1,11 @@
-# mx-codigos-postales
 
-Librería mexicana para desarrollo de aplicaciones.
+<!-- DONATIONS-START -->
+## 💖 Apoya el Ecosistema Mexicano OSS
 
-## Instalación
+Si estos paquetes te ayudan (RFC, ISR, Nómina, Bancos, Feriados, Nombres, Códigos Postales, Validadores), considera invitarme un café o apoyar el mantenimiento:
 
-```bash
-npm install mx-codigos-postales
-```
+- [Ko-fi](https://ko-fi.com/gerardolucero)
+- [Buy Me a Coffee](https://buymeacoffee.com/lucerorios0)
 
-## Uso
-
-```javascript
-import mx-codigos-postales from 'mx-codigos-postales';
-
-// Usar la librería
-console.log(mx-codigos-postales);
-```
-
-## Licencia
-
-MIT © Gerardo Lucero
-# Pipeline fix Wed Sep 24 23:59:35 CST 2025
+> Gracias por tu apoyo 🙌. Priorizaré issues/PRs con **contexto de uso en México** (SAT/IMSS/INFONAVIT, bancos, feriados) y publicaré avances en los READMEs.
+<!-- DONATIONS-END -->
