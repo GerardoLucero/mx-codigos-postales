@@ -5,23 +5,23 @@
 
 // Base de datos de códigos postales mexicanos (muestra representativa)
 const CODIGOS_POSTALES_DATA = {
-  "01000": {
-    codigoPostal: "01000", estado: "Ciudad de México", codigoEstado: "09",
-    municipio: "Álvaro Obregón", ciudad: "Ciudad de México", colonia: "San Ángel",
-    tipoAsentamiento: "Colonia", zona: "Urbano",
-    coordenadas: { latitud: 19.3467, longitud: -99.1869 }, region: "Centro"
+  '01000': {
+    codigoPostal: '01000', estado: 'Ciudad de México', codigoEstado: '09',
+    municipio: 'Álvaro Obregón', ciudad: 'Ciudad de México', colonia: 'San Ángel',
+    tipoAsentamiento: 'Colonia', zona: 'Urbano',
+    coordenadas: { latitud: 19.3467, longitud: -99.1869 }, region: 'Centro'
   },
-  "44100": {
-    codigoPostal: "44100", estado: "Jalisco", codigoEstado: "14",
-    municipio: "Guadalajara", ciudad: "Guadalajara", colonia: "Centro",
-    tipoAsentamiento: "Colonia", zona: "Urbano",
-    coordenadas: { latitud: 20.6597, longitud: -103.3496 }, region: "Occidente"
+  '44100': {
+    codigoPostal: '44100', estado: 'Jalisco', codigoEstado: '14',
+    municipio: 'Guadalajara', ciudad: 'Guadalajara', colonia: 'Centro',
+    tipoAsentamiento: 'Colonia', zona: 'Urbano',
+    coordenadas: { latitud: 20.6597, longitud: -103.3496 }, region: 'Occidente'
   },
-  "64000": {
-    codigoPostal: "64000", estado: "Nuevo León", codigoEstado: "19",
-    municipio: "Monterrey", ciudad: "Monterrey", colonia: "Centro",
-    tipoAsentamiento: "Colonia", zona: "Urbano",
-    coordenadas: { latitud: 25.6714, longitud: -100.3089 }, region: "Noreste"
+  '64000': {
+    codigoPostal: '64000', estado: 'Nuevo León', codigoEstado: '19',
+    municipio: 'Monterrey', ciudad: 'Monterrey', colonia: 'Centro',
+    tipoAsentamiento: 'Colonia', zona: 'Urbano',
+    coordenadas: { latitud: 25.6714, longitud: -100.3089 }, region: 'Noreste'
   }
 };
 
