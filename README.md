@@ -2,12 +2,10 @@
 
 Base de datos completa de códigos postales mexicanos. Consulta estado, municipio y colonias a partir de un CP, valida códigos postales y busca por nombre de localidad.
 
-[![Ko-fi](https://img.shields.io/badge/Ko--fi-FF5E5B?style=flat&logo=ko-fi&logoColor=white)](https://ko-fi.com/gerardolucero)
-[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-FFDD00?style=flat&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/lucerorios0)
-[![GitHub Stars](https://img.shields.io/github/stars/GerardoLucero/mx-codigos-postales?style=social)](https://github.com/GerardoLucero/mx-codigos-postales)
 [![npm version](https://badge.fury.io/js/mx-codigos-postales.svg)](https://www.npmjs.com/package/mx-codigos-postales)
 [![npm downloads](https://img.shields.io/npm/dm/mx-codigos-postales.svg)](https://www.npmjs.com/package/mx-codigos-postales)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![CI](https://github.com/GerardoLucero/mx-codigos-postales/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/GerardoLucero/mx-codigos-postales/actions/workflows/ci-cd.yml)
 
 ## Features
 
@@ -132,9 +130,16 @@ function validarDireccion(datos) {
 
 Los datos están basados en el catálogo de [SEPOMEX](https://www.correosdemexico.gob.mx/SSLServicios/ConsultaCP/Descarga.aspx) — Servicio Postal Mexicano.
 
+## Apoyo
+
+Proyecto de código abierto mantenido en mi tiempo libre. Si te fue útil y quieres agradecerlo:
+
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-FF5E5B?style=flat&logo=ko-fi&logoColor=white)](https://ko-fi.com/gerardolucero)
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-FFDD00?style=flat&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/lucerorios0)
+
 ## Licencia
 
-MIT © [Gerardo Lucero](https://github.com/GerardoLucero)
+MIT © [Gerardo Lucero](https://github.com/GerardoLucero), ver [LICENSE](LICENSE).
 
 ---
 
