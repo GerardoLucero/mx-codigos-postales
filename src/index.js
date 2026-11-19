@@ -1,156 +1,249 @@
 /**
- * Librería completa de códigos postales mexicanos
- * Incluye geolocalización, búsquedas y cálculo de distancias
+ * mx-codigos-postales
+ *
+ * Consulta el Catalogo Nacional de Codigos Postales de Correos de Mexico (SEPOMEX):
+ * estado, municipio, ciudad y asentamientos (colonias, fraccionamientos, ejidos, ...) de cada CP.
  */
+import catalogo from '../data/catalogo.json';
 
-// Base de datos de códigos postales mexicanos (muestra representativa)
-const CODIGOS_POSTALES_DATA = {
-  '01000': {
-    codigoPostal: '01000', estado: 'Ciudad de México', codigoEstado: '09',
-    municipio: 'Álvaro Obregón', ciudad: 'Ciudad de México', colonia: 'San Ángel',
-    tipoAsentamiento: 'Colonia', zona: 'Urbano',
-    coordenadas: { latitud: 19.3467, longitud: -99.1869 }, region: 'Centro'
-  },
-  '44100': {
-    codigoPostal: '44100', estado: 'Jalisco', codigoEstado: '14',
-    municipio: 'Guadalajara', ciudad: 'Guadalajara', colonia: 'Centro',
-    tipoAsentamiento: 'Colonia', zona: 'Urbano',
-    coordenadas: { latitud: 20.6597, longitud: -103.3496 }, region: 'Occidente'
-  },
-  '64000': {
-    codigoPostal: '64000', estado: 'Nuevo León', codigoEstado: '19',
-    municipio: 'Monterrey', ciudad: 'Monterrey', colonia: 'Centro',
-    tipoAsentamiento: 'Colonia', zona: 'Urbano',
-    coordenadas: { latitud: 25.6714, longitud: -100.3089 }, region: 'Noreste'
-  }
+const ALIAS_ESTADOS = {
+  CDMX: '09',
+  DF: '09',
+  'DISTRITO FEDERAL': '09',
+  'CIUDAD DE MEXICO': '09',
+  EDOMEX: '15',
+  'ESTADO DE MEXICO': '15',
+  MEXICO: '15',
+  'COAHUILA': '05',
+  'MICHOACAN': '16',
+  'VERACRUZ': '30'
 };
 
+let indiceCP = null;
+let indiceNombres = null;
+
+/** Mayusculas, sin acentos ni dieresis y con espacios simples. */
+function normalizar(texto) {
+  return String(texto)
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toUpperCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function cpComoTexto(codigoPostal) {
+  if (typeof codigoPostal === 'number' && Number.isInteger(codigoPostal)) {
+    return String(codigoPostal).padStart(5, '0');
+  }
+  return typeof codigoPostal === 'string' ? codigoPostal.replace(/[\s-]/g, '') : '';
+}
+
+function obtenerIndiceCP() {
+  if (!indiceCP) {
+    indiceCP = new Map(catalogo.codigos.map((entrada) => [entrada[0], entrada]));
+  }
+  return indiceCP;
+}
+
+function estadoDe(indiceEstado) {
+  const [clave, nombre] = catalogo.estados[indiceEstado];
+  return { clave, nombre };
+}
+
+function municipioDe(indiceMunicipio) {
+  const [indiceEstado, clave, nombre] = catalogo.municipios[indiceMunicipio];
+  return { municipio: { clave, nombre }, estado: estadoDe(indiceEstado), indiceEstado };
+}
+
+function asentamientoDe([nombre, tipo, zona, ciudad]) {
+  return {
+    nombre,
+    tipo: catalogo.tipos[tipo],
+    zona: catalogo.zonas[zona],
+    ciudad: ciudad >= 0 ? catalogo.ciudades[ciudad] : null
+  };
+}
+
+/** Devuelve el indice del estado a partir de su clave INEGI ('09'), nombre o abreviatura comun. */
+function indiceDeEstado(estado) {
+  if (estado === undefined || estado === null || estado === '') return -1;
+  const texto = typeof estado === 'number' ? String(estado).padStart(2, '0') : normalizar(estado);
+  const clave = /^\d{1,2}$/.test(texto) ? texto.padStart(2, '0') : ALIAS_ESTADOS[texto];
+  return catalogo.estados.findIndex(([c, nombre]) => c === clave || normalizar(nombre) === texto);
+}
+
+function estadoRequerido(estado) {
+  const indice = indiceDeEstado(estado);
+  if (indice < 0) throw new Error(`Estado no reconocido: "${estado}"`);
+  return indice;
+}
+
 /**
- * Valida si un código postal mexicano es válido
+ * Indica si el texto tiene forma de codigo postal mexicano (5 digitos).
+ * No consulta el catalogo: para eso usar existeCodigoPostal.
+ * @param {string | number} codigoPostal
+ * @returns {boolean}
  */
 export function validarCodigoPostal(codigoPostal) {
-  if (!codigoPostal || typeof codigoPostal !== 'string') return false;
-  const cp = codigoPostal.replace(/[\s-]/g, '');
-  const regex = /^[0-9]{5}$/;
-  if (!regex.test(cp)) return false;
-  const numero = parseInt(cp);
-  return numero >= 1000 && numero <= 99999;
+  return /^\d{5}$/.test(cpComoTexto(codigoPostal));
 }
 
 /**
- * Busca información de un código postal
+ * Indica si el codigo postal existe en el catalogo de SEPOMEX.
+ * @param {string | number} codigoPostal
+ * @returns {boolean}
+ */
+export function existeCodigoPostal(codigoPostal) {
+  return obtenerIndiceCP().has(cpComoTexto(codigoPostal));
+}
+
+/**
+ * Consulta un codigo postal: estado, municipio, ciudades y asentamientos.
+ * @param {string | number} codigoPostal
+ * @returns {object | null}
  */
 export function buscarCodigoPostal(codigoPostal) {
-  if (!validarCodigoPostal(codigoPostal)) return null;
-  const cp = codigoPostal.replace(/[\s-]/g, '');
-  return CODIGOS_POSTALES_DATA[cp] || null;
+  const entrada = obtenerIndiceCP().get(cpComoTexto(codigoPostal));
+  if (!entrada) return null;
+
+  const [cp, indiceMunicipio, asentamientos] = entrada;
+  const { municipio, estado } = municipioDe(indiceMunicipio);
+  const lista = asentamientos.map(asentamientoDe);
+  return {
+    codigoPostal: cp,
+    estado,
+    municipio,
+    ciudades: [...new Set(lista.map((a) => a.ciudad).filter(Boolean))],
+    asentamientos: lista
+  };
 }
 
 /**
- * Obtiene códigos postales por estado
+ * Busca asentamientos (colonias, fraccionamientos, etc.) por nombre, sin importar acentos ni mayusculas.
+ * Primero las coincidencias exactas, luego las que empiezan con el texto y al final las que lo contienen.
+ * @param {string} texto
+ * @param {{ estado?: string | number, municipio?: string, limite?: number }} [opciones]
+ * @returns {Array<object>}
+ */
+export function buscarPorColonia(texto, opciones = {}) {
+  const buscado = normalizar(texto || '');
+  if (buscado.length < 2) throw new Error('Escribe al menos 2 caracteres para buscar');
+
+  const { estado, municipio, limite = 50 } = opciones;
+  const filtroEstado = estado === undefined ? -1 : estadoRequerido(estado);
+  const filtroMunicipio = municipio ? normalizar(municipio) : null;
+
+  if (!indiceNombres) {
+    indiceNombres = catalogo.codigos.map(([, , asentamientos]) => asentamientos.map(([nombre]) => normalizar(nombre)));
+  }
+
+  const resultados = [];
+  catalogo.codigos.forEach(([cp, indiceMunicipio, asentamientos], i) => {
+    const datos = municipioDe(indiceMunicipio);
+    if (filtroEstado >= 0 && datos.indiceEstado !== filtroEstado) return;
+    if (filtroMunicipio && normalizar(datos.municipio.nombre) !== filtroMunicipio) return;
+
+    indiceNombres[i].forEach((nombre, j) => {
+      const posicion = nombre.indexOf(buscado);
+      if (posicion < 0) return;
+      const rango = nombre === buscado ? 0 : posicion === 0 ? 1 : 2;
+      resultados.push({
+        rango,
+        resultado: {
+          codigoPostal: cp,
+          ...asentamientoDe(asentamientos[j]),
+          municipio: datos.municipio,
+          estado: datos.estado
+        }
+      });
+    });
+  });
+
+  return resultados
+    .sort((a, b) => a.rango - b.rango || a.resultado.codigoPostal.localeCompare(b.resultado.codigoPostal))
+    .slice(0, limite)
+    .map((r) => r.resultado);
+}
+
+/**
+ * Codigos postales de un municipio. Como hay municipios con el mismo nombre en varios estados
+ * (por ejemplo, Benito Juarez), devuelve un grupo por cada coincidencia; se puede filtrar por estado.
+ * @param {string} municipio
+ * @param {{ estado?: string | number }} [opciones]
+ * @returns {Array<{ estado: object, municipio: object, codigosPostales: string[] }>}
+ */
+export function buscarPorMunicipio(municipio, opciones = {}) {
+  const buscado = normalizar(municipio || '');
+  const filtroEstado = opciones.estado === undefined ? -1 : estadoRequerido(opciones.estado);
+  const grupos = new Map();
+
+  for (const [cp, indiceMunicipio] of catalogo.codigos) {
+    const datos = municipioDe(indiceMunicipio);
+    if (normalizar(datos.municipio.nombre) !== buscado) continue;
+    if (filtroEstado >= 0 && datos.indiceEstado !== filtroEstado) continue;
+    if (!grupos.has(indiceMunicipio)) {
+      grupos.set(indiceMunicipio, { estado: datos.estado, municipio: datos.municipio, codigosPostales: [] });
+    }
+    grupos.get(indiceMunicipio).codigosPostales.push(cp);
+  }
+  return [...grupos.values()];
+}
+
+/**
+ * Codigos postales de un estado (por clave INEGI, nombre o abreviatura como CDMX o Edomex).
+ * @param {string | number} estado
+ * @returns {string[]}
  */
 export function getCodigosPostalesPorEstado(estado) {
-  if (!estado || typeof estado !== 'string') return [];
-  const estadoNormalizado = estado.toLowerCase();
-  return Object.values(CODIGOS_POSTALES_DATA).filter(cp =>
-    cp.estado.toLowerCase().includes(estadoNormalizado)
-  );
+  const indice = estadoRequerido(estado);
+  return catalogo.codigos
+    .filter(([, indiceMunicipio]) => catalogo.municipios[indiceMunicipio][0] === indice)
+    .map(([cp]) => cp);
+}
+
+/** Los 32 estados con su clave INEGI. */
+export function obtenerEstados() {
+  return catalogo.estados.map((_, i) => estadoDe(i));
 }
 
 /**
- * Busca códigos postales por municipio
+ * Municipios de un estado, con su clave INEGI.
+ * @param {string | number} estado
  */
-export function buscarPorMunicipio(municipio) {
-  if (!municipio || typeof municipio !== 'string') return [];
-  const municipioNormalizado = municipio.toLowerCase();
-  return Object.values(CODIGOS_POSTALES_DATA).filter(cp =>
-    cp.municipio.toLowerCase().includes(municipioNormalizado)
-  );
+export function obtenerMunicipios(estado) {
+  const indice = estadoRequerido(estado);
+  return catalogo.municipios
+    .filter(([indiceEstado]) => indiceEstado === indice)
+    .map(([, clave, nombre]) => ({ clave, nombre }))
+    .sort((a, b) => a.clave.localeCompare(b.clave));
 }
 
-/**
- * Busca códigos postales por colonia
- */
-export function buscarPorColonia(colonia) {
-  if (!colonia || typeof colonia !== 'string') return [];
-  const coloniaNormalizada = colonia.toLowerCase();
-  return Object.values(CODIGOS_POSTALES_DATA).filter(cp =>
-    cp.colonia.toLowerCase().includes(coloniaNormalizada)
-  );
-}
-
-/**
- * Calcula la distancia entre dos puntos usando Haversine
- */
-export function calcularDistancia(lat1, lon1, lat2, lon2) {
-  if (typeof lat1 !== 'number' || typeof lon1 !== 'number' ||
-      typeof lat2 !== 'number' || typeof lon2 !== 'number') {
-    throw new Error('Las coordenadas deben ser números válidos');
-  }
-  
-  const R = 6371; // Radio de la Tierra en km
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  
-  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-            Math.sin(dLon/2) * Math.sin(dLon/2);
-  
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  return parseFloat((R * c).toFixed(2));
-}
-
-/**
- * Busca códigos postales cercanos
- */
-export function buscarCercanos(codigoPostal, radioKm = 10) {
-  const cpBase = buscarCodigoPostal(codigoPostal);
-  if (!cpBase || !cpBase.coordenadas) return [];
-  
-  const { latitud, longitud } = cpBase.coordenadas;
-  const cercanos = [];
-  
-  Object.values(CODIGOS_POSTALES_DATA).forEach(cp => {
-    if (cp.codigoPostal !== codigoPostal && cp.coordenadas) {
-      const distancia = calcularDistancia(latitud, longitud, cp.coordenadas.latitud, cp.coordenadas.longitud);
-      if (distancia <= radioKm) {
-        cercanos.push({ ...cp, distanciaKm: distancia });
-      }
-    }
-  });
-  
-  return cercanos.sort((a, b) => a.distanciaKm - b.distanciaKm);
-}
-
-/**
- * Obtiene estadísticas de códigos postales
- */
+/** Totales del catalogo incluido. */
 export function getEstadisticas() {
-  const codigos = Object.values(CODIGOS_POSTALES_DATA);
-  const estadoStats = {};
-  
-  codigos.forEach(cp => {
-    estadoStats[cp.estado] = (estadoStats[cp.estado] || 0) + 1;
-  });
-  
   return {
-    totalCodigosPostales: codigos.length,
-    estados: Object.keys(estadoStats).length,
-    distribuciones: { porEstado: estadoStats },
-    cobertura: {
-      conCoordenadas: codigos.filter(cp => cp.coordenadas).length,
-      sinCoordenadas: codigos.filter(cp => !cp.coordenadas).length
-    }
+    codigosPostales: catalogo.codigos.length,
+    asentamientos: catalogo.codigos.reduce((n, [, , a]) => n + a.length, 0),
+    municipios: catalogo.municipios.length,
+    estados: catalogo.estados.length,
+    fechaCatalogo: catalogo.fecha
   };
+}
+
+/** Fuente, fecha y aviso de uso del catalogo, tal como los publica Correos de Mexico. */
+export function infoCatalogo() {
+  return { fuente: catalogo.fuente, url: catalogo.url, fecha: catalogo.fecha, aviso: catalogo.aviso };
 }
 
 export default {
   validarCodigoPostal,
+  existeCodigoPostal,
   buscarCodigoPostal,
-  getCodigosPostalesPorEstado,
-  buscarPorMunicipio,
   buscarPorColonia,
-  calcularDistancia,
-  buscarCercanos,
-  getEstadisticas
+  buscarPorMunicipio,
+  getCodigosPostalesPorEstado,
+  obtenerEstados,
+  obtenerMunicipios,
+  getEstadisticas,
+  infoCatalogo
 };

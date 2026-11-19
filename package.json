@@ -1,8 +1,8 @@
 {
   "name": "mx-codigos-postales",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "type": "module",
-  "description": "Códigos postales mexicanos con geolocalización y búsqueda avanzada",
+  "description": "Catalogo nacional completo de codigos postales de Mexico (SEPOMEX): estado, municipio y colonias de cada CP, busqueda sin acentos. Sin dependencias.",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -10,19 +10,25 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup src/index.js --format esm,cjs --dts --target node20 --clean",
+    "build": "tsup src/index.js --format cjs --dts --target node20 --clean && node scripts/envoltorio-esm.mjs",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "lint": "eslint src/**/*.js",
     "lint:fix": "eslint src/**/*.js --fix",
-    "prepublishOnly": "npm test && npm run lint && npm run build"
+    "prepublishOnly": "npm test && npm run lint && npm run build",
+    "actualizar-catalogo": "node scripts/actualizar-catalogo.mjs"
   },
   "keywords": [
+    "codigo-postal",
+    "codigos-postales",
+    "sepomex",
     "mexico",
-    "postal",
-    "zip",
-    "geolocation"
+    "colonias",
+    "municipios",
+    "estados",
+    "direcciones",
+    "autocompletar"
   ],
   "author": {
     "name": "Gerardo Lucero",
