@@ -1,6 +1,6 @@
 {
   "name": "mx-codigos-postales",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "type": "module",
   "description": "Códigos postales mexicanos con geolocalización y búsqueda avanzada",
   "main": "dist/index.js",
@@ -30,7 +30,7 @@
   ],
   "author": {
     "name": "Gerardo Lucero",
-    "email": "tu-email@ejemplo.com"
+    "email": "luceroriosg@gmail.com"
   },
   "license": "MIT",
   "repository": {
